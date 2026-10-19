@@ -4,15 +4,27 @@ package ru.portfolio.taskmanager;
 import ru.portfolio.taskmanager.model.Priority;
 import ru.portfolio.taskmanager.model.Task;
 import ru.portfolio.taskmanager.model.TaskStatus;
+import ru.portfolio.taskmanager.repository.TaskRepository;
 import ru.portfolio.taskmanager.service.TaskService;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+1
 
     public static void main(String[] args) {
-        TaskService taskService = new TaskService();
+        TaskService taskService;
+
+        try {
+            taskService = new TaskService(new TaskRepository());
+        } catch (IOException e) {
+            System.out.println(
+                    "Не удалось загрузить задачи: " + e.getMessage()
+            );
+            return;
+        }
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
@@ -26,24 +38,31 @@ public class Main {
 
                 String choice = scanner.nextLine().trim();
 
-                switch (choice) {
-                    case "1" -> showTasks(taskService);
-                    case "2" -> addTask(scanner, taskService);
-                    case "3" -> updateStatus(scanner, taskService);
-                    case "4" -> deleteTask(scanner, taskService);
-                    case "0" -> {
-                        System.out.println("До свидания!");
-                        return;
+                try {
+                    switch (choice) {
+                        case "1" -> showTasks(taskService);
+                        case "2" -> addTask(scanner, taskService);
+                        case "3" -> updateStatus(scanner, taskService);
+                        case "4" -> deleteTask(scanner, taskService);
+                        case "0" -> {
+                            System.out.println("До свидания!");
+                            return;
+                        }
+                        default -> System.out.println(
+                                "Ошибка: выбери 1, 2, 3, 4 или 0."
+                        );
                     }
-                    default -> System.out.println(
-                            "Ошибка: выбери 1, 2, 3, 4 или 0."
+                } catch (IOException e) {
+                    System.out.println(
+                            "Не удалось сохранить данные: " + e.getMessage()
                     );
                 }
             }
         }
     }
 
-    private static void showTasks(TaskService taskService) {
+    private static void showTasks(TaskService taskService)
+            throws IOException {
         List<Task> tasks = taskService.getAllTasks();
 
         if (tasks.isEmpty()) {
@@ -59,7 +78,7 @@ public class Main {
     private static void addTask(
             Scanner scanner,
             TaskService taskService
-    ) {
+    ) throws IOException {
         System.out.print("Название задачи: ");
         String title = scanner.nextLine();
 
@@ -99,7 +118,7 @@ public class Main {
     private static void updateStatus(
             Scanner scanner,
             TaskService taskService
-    ) {
+    ) throws IOException {
         System.out.print("ID задачи: ");
         int id = readId(scanner);
 
@@ -138,7 +157,7 @@ public class Main {
     private static void deleteTask(
             Scanner scanner,
             TaskService taskService
-    ) {
+    )throws IOException  {
         System.out.print("ID задачи для удаления: ");
         int id = readId(scanner);
 
@@ -155,7 +174,8 @@ public class Main {
         }
     }
 
-    private static int readId(Scanner scanner) {
+    private static int readId(Scanner scanner)
+            throws IOException {
         try {
             return Integer.parseInt(scanner.nextLine().trim());
         } catch (NumberFormatException e) {

@@ -4,23 +4,50 @@ package ru.portfolio.taskmanager.service;
 import ru.portfolio.taskmanager.model.Priority;
 import ru.portfolio.taskmanager.model.Task;
 import ru.portfolio.taskmanager.model.TaskStatus;
+import ru.portfolio.taskmanager.repository.TaskRepository;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskService {
 
     private final List<Task> tasks = new ArrayList<>();
+    private final TaskRepository taskRepository;
     private int nextId = 1;
 
+    public TaskService(TaskRepository taskRepository)
+            throws IOException {
+        this.taskRepository = taskRepository;
+        tasks.addAll(taskRepository.loadTasks());
+
+        int maxId = 0;
+
+        for (Task task : tasks) {
+            if (task.getId() > maxId) {
+                maxId = task.getId();
+            }
+        }
+
+        nextId = maxId + 1;
+    }
+
     public Task addTask(String title, String description,
-                        Priority priority) {
+                        Priority priority) throws IOException {
         Task task = new Task(
                 nextId, title, description, priority
         );
 
         tasks.add(task);
         nextId++;
+
+        try {
+            taskRepository.saveTasks(tasks);
+        } catch (IOException e) {
+            tasks.remove(task);
+            nextId--;
+            throw e;
+        }
 
         return task;
     }
@@ -29,13 +56,33 @@ public class TaskService {
         return List.copyOf(tasks);
     }
 
-    public void updateStatus(int id, TaskStatus status) {
-        findById(id).setStatus(status);
+    public void updateStatus(int id, TaskStatus status)
+            throws IOException {
+        Task task = findById(id);
+        TaskStatus oldStatus = task.getStatus();
+
+        task.setStatus(status);
+
+        try {
+            taskRepository.saveTasks(tasks);
+        } catch (IOException e) {
+            task.setStatus(oldStatus);
+            throw e;
+        }
     }
 
-    public void deleteTask(int id) {
+    public void deleteTask(int id) throws IOException {
         Task task = findById(id);
-        tasks.remove(task);
+        int index = tasks.indexOf(task);
+
+        tasks.remove(index);
+
+        try {
+            taskRepository.saveTasks(tasks);
+        } catch (IOException e) {
+            tasks.add(index, task);
+            throw e;
+        }
     }
 
     private Task findById(int id) {
