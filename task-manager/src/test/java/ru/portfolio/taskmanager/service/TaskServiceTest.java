@@ -110,4 +110,47 @@ class TaskServiceTest {
         assertEquals(Priority.HIGH, tasks.get(0).getPriority());
         assertEquals(TaskStatus.DONE, tasks.get(0).getStatus());
     }
+
+    @Test
+    void shouldSearchTasksByTitleIgnoringCase() throws IOException {
+        TaskService taskService = createTaskService();
+
+        taskService.addTask("Выучить Java", "", Priority.MEDIUM);
+        taskService.addTask("Купить хлеб", "", Priority.LOW);
+
+        List<Task> found = taskService.searchByTitle("JAVA");
+
+        assertEquals(1, found.size());
+        assertEquals("Выучить Java", found.get(0).getTitle());
+    }
+
+    @Test
+    void shouldFilterTasksByStatus() throws IOException {
+        TaskService taskService = createTaskService();
+
+        Task first = taskService.addTask(
+                "Первая задача", "", Priority.LOW
+        );
+        taskService.addTask("Вторая задача", "", Priority.HIGH);
+
+        taskService.updateStatus(first.getId(), TaskStatus.DONE);
+
+        List<Task> found = taskService.filterByStatus(TaskStatus.DONE);
+
+        assertEquals(1, found.size());
+        assertEquals(first.getId(), found.get(0).getId());
+    }
+
+    @Test
+    void shouldFilterTasksByPriority() throws IOException {
+        TaskService taskService = createTaskService();
+
+        taskService.addTask("Обычная задача", "", Priority.MEDIUM);
+        taskService.addTask("Срочная задача", "", Priority.HIGH);
+
+        List<Task> found = taskService.filterByPriority(Priority.HIGH);
+
+        assertEquals(1, found.size());
+        assertEquals("Срочная задача", found.get(0).getTitle());
+    }
 }

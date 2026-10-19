@@ -1,6 +1,7 @@
 
 package ru.portfolio.taskmanager.service;
 
+import java.util.Locale;
 import ru.portfolio.taskmanager.model.Priority;
 import ru.portfolio.taskmanager.model.Task;
 import ru.portfolio.taskmanager.model.TaskStatus;
@@ -11,6 +12,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TaskService {
+
+    public List<Task> searchByTitle(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        String searchText = query.trim().toLowerCase(Locale.ROOT);
+
+        return tasks.stream()
+                .filter(task -> task.getTitle()
+                        .toLowerCase(Locale.ROOT)
+                        .contains(searchText))
+                .toList();
+    }
+
+    public List<Task> filterByStatus(TaskStatus status) {
+        return tasks.stream()
+                .filter(task -> task.getStatus() == status)
+                .toList();
+    }
+
+    public List<Task> filterByPriority(Priority priority) {
+        return tasks.stream()
+                .filter(task -> task.getPriority() == priority)
+                .toList();
+    }
+
 
     private final List<Task> tasks = new ArrayList<>();
     private final TaskRepository taskRepository;

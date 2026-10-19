@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-1
 
     public static void main(String[] args) {
         TaskService taskService;
@@ -33,6 +32,9 @@ public class Main {
                 System.out.println("2. Добавить задачу");
                 System.out.println("3. Изменить статус");
                 System.out.println("4. Удалить задачу");
+                System.out.println("5. Поиск по названию");
+                System.out.println("6. Фильтр по статусу");
+                System.out.println("7. Фильтр по приоритету");
                 System.out.println("0. Выход");
                 System.out.print("Выбери действие: ");
 
@@ -44,6 +46,9 @@ public class Main {
                         case "2" -> addTask(scanner, taskService);
                         case "3" -> updateStatus(scanner, taskService);
                         case "4" -> deleteTask(scanner, taskService);
+                        case "5" -> searchTasks(scanner, taskService);
+                        case "6" -> filterByStatus(scanner, taskService);
+                        case "7" -> filterByPriority(scanner, taskService);
                         case "0" -> {
                             System.out.println("До свидания!");
                             return;
@@ -157,7 +162,7 @@ public class Main {
     private static void deleteTask(
             Scanner scanner,
             TaskService taskService
-    )throws IOException  {
+    ) throws IOException {
         System.out.print("ID задачи для удаления: ");
         int id = readId(scanner);
 
@@ -182,4 +187,83 @@ public class Main {
             return -1;
         }
     }
+
+
+    private static void searchTasks(
+            Scanner scanner,
+            TaskService taskService
+    ) {
+        System.out.print("Введи название или его часть: ");
+        String query = scanner.nextLine();
+
+        if (query.isBlank()) {
+            System.out.println("Поисковый запрос не может быть пустым.");
+            return;
+        }
+
+        List<Task> foundTasks = taskService.searchByTitle(query);
+        printTasks(foundTasks);
+    }
+
+    private static void filterByStatus(
+            Scanner scanner,
+            TaskService taskService
+    ) {
+        System.out.println("1. NEW");
+        System.out.println("2. IN_PROGRESS");
+        System.out.println("3. DONE");
+        System.out.print("Выбери статус: ");
+
+        String choice = scanner.nextLine().trim();
+        TaskStatus status;
+
+        switch (choice) {
+            case "1" -> status = TaskStatus.NEW;
+            case "2" -> status = TaskStatus.IN_PROGRESS;
+            case "3" -> status = TaskStatus.DONE;
+            default -> {
+                System.out.println("Неизвестный статус.");
+                return;
+            }
+        }
+
+        printTasks(taskService.filterByStatus(status));
+    }
+
+    private static void filterByPriority(
+            Scanner scanner,
+            TaskService taskService
+    ) {
+        System.out.println("1. LOW");
+        System.out.println("2. MEDIUM");
+        System.out.println("3. HIGH");
+        System.out.print("Выбери приоритет: ");
+
+        String choice = scanner.nextLine().trim();
+        Priority priority;
+
+        switch (choice) {
+            case "1" -> priority = Priority.LOW;
+            case "2" -> priority = Priority.MEDIUM;
+            case "3" -> priority = Priority.HIGH;
+            default -> {
+                System.out.println("Неизвестный приоритет.");
+                return;
+            }
+        }
+
+        printTasks(taskService.filterByPriority(priority));
+    }
+
+    private static void printTasks(List<Task> tasks) {
+        if (tasks.isEmpty()) {
+            System.out.println("Задачи не найдены.");
+            return;
+        }
+
+        for (Task task : tasks) {
+            System.out.println(task);
+        }
+    }
 }
+
