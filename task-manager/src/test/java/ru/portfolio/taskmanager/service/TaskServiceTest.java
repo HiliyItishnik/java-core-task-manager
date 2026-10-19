@@ -2,7 +2,9 @@
 package ru.portfolio.taskmanager.service;
 
 import org.junit.jupiter.api.Test;
+import ru.portfolio.taskmanager.model.Priority;
 import ru.portfolio.taskmanager.model.Task;
+import ru.portfolio.taskmanager.model.TaskStatus;
 
 import java.util.List;
 
@@ -16,11 +18,14 @@ class TaskServiceTest {
 
         Task task = taskService.addTask(
                 "Выучить Java",
-                "Повторить ООП"
+                "Повторить ООП",
+                Priority.MEDIUM
         );
 
         assertEquals(1, task.getId());
         assertEquals("Выучить Java", task.getTitle());
+        assertEquals(Priority.MEDIUM, task.getPriority());
+        assertEquals(TaskStatus.NEW, task.getStatus());
         assertEquals(1, taskService.getAllTasks().size());
     }
 
@@ -39,7 +44,35 @@ class TaskServiceTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> taskService.addTask("   ", "Описание")
+                () -> taskService.addTask(
+                        "   ", "Описание", Priority.LOW
+                )
         );
+    }
+
+    @Test
+    void shouldUpdateTaskStatus() {
+        TaskService taskService = new TaskService();
+
+        Task task = taskService.addTask(
+                "Выучить Java", "", Priority.HIGH
+        );
+
+        taskService.updateStatus(task.getId(), TaskStatus.DONE);
+
+        assertEquals(TaskStatus.DONE, task.getStatus());
+    }
+
+    @Test
+    void shouldDeleteTask() {
+        TaskService taskService = new TaskService();
+
+        Task task = taskService.addTask(
+                "Выучить Java", "", Priority.LOW
+        );
+
+        taskService.deleteTask(task.getId());
+
+        assertTrue(taskService.getAllTasks().isEmpty());
     }
 }
